@@ -2,9 +2,11 @@ package logger
 
 import (
 	"fmt"
+	"github.com/novikoff-vvs/logger/helpers"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"path/filepath"
 )
 
 type Interface interface {
@@ -20,6 +22,11 @@ type ZapLogger struct {
 }
 
 func NewZapLogger(logFilePath, logName string, setStdoutOutput bool) (*ZapLogger, error) {
+	// Убедимся, что директория существует
+	if err := helpers.EnsureDir(logFilePath); err != nil {
+		return nil, err
+	}
+
 	if setStdoutOutput {
 		cf := zap.Config{
 			EncoderConfig:    zap.NewProductionEncoderConfig(),
@@ -38,9 +45,9 @@ func NewZapLogger(logFilePath, logName string, setStdoutOutput bool) (*ZapLogger
 		}, nil
 	}
 
-	infoPath := logFilePath + "info_" + logName + ".log"
-	errorPath := logFilePath + "error_" + logName + ".log"
-	debugPath := logFilePath + "debug_" + logName + ".log" // Добавляем путь для дебага
+	infoPath := filepath.Join(logFilePath, "info_"+logName+".log")
+	errorPath := filepath.Join(logFilePath, "error_"+logName+".log")
+	debugPath := filepath.Join(logFilePath, "debug_"+logName+".log")
 
 	// Создаем WriteSyncer для информационных сообщений
 	infoFile, err := os.OpenFile(infoPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
